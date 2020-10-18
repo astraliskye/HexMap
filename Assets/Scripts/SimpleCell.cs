@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+// Class to keep track of cell metrics and coordinates
 public class SimpleCell : MonoBehaviour
 {
-    public static float radius = 1f;
+    // Static variables that apply to every cell
+    public static float radius = 10f;
     public static float apothem = 0.86602540378f * radius;
 
     public static Vector3[] points =
@@ -19,45 +20,11 @@ public class SimpleCell : MonoBehaviour
         new Vector3(0, 0, radius)
     };
 
-    Mesh mesh;
-    List<Vector3> vertices;
-    List<int> triangles;
+    public static float elevationUnit = 5f;
 
-    private void Awake()
-    {
-        GetComponent<MeshFilter>().mesh = mesh = new Mesh();
-        vertices = new List<Vector3>();
-        triangles = new List<int>();
-    }
+    public Vector3 position;
 
-    public void Triangulate()
-    {
-        vertices.Clear();
-        triangles.Clear();
-
-        for (int i = 0; i < 6; i++)
-        {
-            AddTriangle(
-                Vector3.zero,
-                points[i],
-                points[i + 1]);
-        }
-
-        mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
-        mesh.RecalculateNormals();
-    }
-
-    void AddTriangle(Vector3 a, Vector3 b, Vector3 c)
-    {
-        int currentIndex = vertices.Count;
-
-        vertices.Add(a);
-        vertices.Add(b);
-        vertices.Add(c);
-
-        triangles.Add(currentIndex);
-        triangles.Add(currentIndex + 1);
-        triangles.Add(currentIndex + 2);
-    }
+    // Cell coordinates
+    [SerializeField]
+    public int x, z;
 }
