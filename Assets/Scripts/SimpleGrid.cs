@@ -8,7 +8,7 @@ public class SimpleGrid : MonoBehaviour
     [SerializeField]
     SimpleCell cellPrefab;
 
-    public List<SimpleCell> cells;
+    public Dictionary<CellCoordinates, SimpleCell> cells;
 
     [SerializeField]
     int width = 4, height = 3;
@@ -19,7 +19,7 @@ public class SimpleGrid : MonoBehaviour
     void Awake()
     {
         // Instantiate cell data
-        cells = new List<SimpleCell>();
+        cells = new Dictionary<CellCoordinates, SimpleCell>();
 
         // Create the cells
         for (int z = 0; z < height; z++)
@@ -35,30 +35,30 @@ public class SimpleGrid : MonoBehaviour
                     );
                 cell.transform.SetParent(this.transform, false);
 
-                cell.x = x - z / 2;
-                cell.z = z;
+                cell.coordinates = new CellCoordinates(x - z / 2, z);
 
-                cells.Add(cell);
+                cells[cell.coordinates] = cell;
             }
         }
 
         // Create a mesh from the cells
         mesh = GetComponentInChildren<SimpleMesh>();
-        mesh.Triangulate(cells.ToArray());
+
+        mesh.Triangulate(cells);
     }
 
     // Called once per frame
     private void Update()
     {
-        mesh.Triangulate(cells.ToArray());
+        mesh.Triangulate(cells);
     }
 
     // Return a cell from the grid based on its hex coordinates
-    public SimpleCell GetCell(int x, int z)
+    public SimpleCell GetCell(CellCoordinates coordinates)
     {
         try
         {
-            return cells[x + z / 2 + z * width];
+            return cells[coordinates];
         }
         catch (IndexOutOfRangeException)
         {

@@ -66,8 +66,8 @@ public class SimpleMapEditor : MonoBehaviour
                     }
                 }
 
-                activeCell = simpleGrid.GetCell(xCoord, zCoord);
-                slider.value = activeCell.position.y;
+                activeCell = simpleGrid.GetCell(new CellCoordinates(xCoord, zCoord));
+                slider.value = activeCell.position.y / SimpleCell.elevationUnit;
             }
         }
     }

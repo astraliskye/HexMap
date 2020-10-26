@@ -6,7 +6,7 @@ using UnityEngine;
 public class SimpleCell : MonoBehaviour
 {
     // Static variables that apply to every cell
-    public static float radius = 10f;
+    public static float radius = 3f;
     public static float apothem = 0.86602540378f * radius;
 
     public static Vector3[] points =
@@ -20,11 +20,11 @@ public class SimpleCell : MonoBehaviour
         new Vector3(0, 0, radius)
     };
 
-    public static float elevationUnit = 5f;
+    public static float elevationUnit = 1.5f;
 
     public Vector3 position;
 
     // Cell coordinates
     [SerializeField]
-    public int x, z;
+    public CellCoordinates coordinates;
 }
