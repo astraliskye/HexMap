@@ -23,6 +23,7 @@ public class SimpleCell : MonoBehaviour
     public static float elevationUnit = 1.5f;
 
     public Vector3 position;
+    public int color;
 
     // Cell coordinates
     [SerializeField]

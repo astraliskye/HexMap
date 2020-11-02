@@ -9,7 +9,10 @@ public class SimpleMesh : MonoBehaviour
     // Mesh data
     List<Vector3> vertices;
     List<int> triangles;
+    List<Color> colors;
     Mesh mesh;
+
+    public Color[] colorPallet;
 
     MeshCollider meshCollider;
     Dictionary<CellCoordinates, SimpleCell> cells;
@@ -20,6 +23,7 @@ public class SimpleMesh : MonoBehaviour
         // Initialize mesh data
         vertices = new List<Vector3>();
         triangles = new List<int>();
+        colors = new List<Color>();
         GetComponent<MeshFilter>().mesh = mesh = new Mesh();
 
         // Get mesh collider
@@ -34,6 +38,7 @@ public class SimpleMesh : MonoBehaviour
         // Trash old mesh data if mesh has previously been triangulated
         vertices.Clear();
         triangles.Clear();
+        colors.Clear();
 
         // Generate mesh data
         foreach (SimpleCell cell in cells.Values)
@@ -44,6 +49,7 @@ public class SimpleMesh : MonoBehaviour
         // Attach data to mesh
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
+        mesh.colors = colors.ToArray();
         mesh.RecalculateNormals();
 
         // Attach mesh to mesh collider
@@ -61,7 +67,8 @@ public class SimpleMesh : MonoBehaviour
             AddTriangle(
                 center,
                 center + SimpleCell.points[i],
-                center + SimpleCell.points[i + 1]);
+                center + SimpleCell.points[i + 1],
+                colorPallet[cell.color]);
         }
 
         for (int i = 0; i < 3; i++)
@@ -73,7 +80,7 @@ public class SimpleMesh : MonoBehaviour
             {
                 neighbor = cells[neighborCoordinates];
             }
-            catch (KeyNotFoundException e)
+            catch (KeyNotFoundException)
             {
                 continue;
             }
@@ -84,21 +91,22 @@ public class SimpleMesh : MonoBehaviour
                 center + SimpleCell.points[i + 1],
                 center + SimpleCell.points[i],
                 neighborCenter + SimpleCell.points[i + 4],
-                neighborCenter + SimpleCell.points[i + 3]
+                neighborCenter + SimpleCell.points[i + 3],
+                new Color(205f / 255, 133f / 255, 63f / 255)
                 );
         }
     }
 
     // Utility function to add a quad to the mesh data
-    void AddQuad(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+    void AddQuad(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Color color)
     {
-        AddTriangle(a, b, c);
-        AddTriangle(c, d, a);
+        AddTriangle(a, b, c, color);
+        AddTriangle(c, d, a, color);
     }
 
     // Utility function to add a triangle to the mesh data
     // Suboptimal due to duplicate shared vertices
-    void AddTriangle(Vector3 a, Vector3 b, Vector3 c)
+    void AddTriangle(Vector3 a, Vector3 b, Vector3 c, Color color)
     {
         int currentIndex = vertices.Count;
 
@@ -109,5 +117,9 @@ public class SimpleMesh : MonoBehaviour
         triangles.Add(currentIndex);
         triangles.Add(currentIndex + 1);
         triangles.Add(currentIndex + 2);
+
+        colors.Add(color);
+        colors.Add(color);
+        colors.Add(color);
     }
 }

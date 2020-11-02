@@ -65,9 +65,10 @@ public class SimpleMapEditor : MonoBehaviour
                         zCoord = -xCoord - yCoord;
                     }
                 }
-
                 activeCell = simpleGrid.GetCell(new CellCoordinates(xCoord, zCoord));
                 slider.value = activeCell.position.y / SimpleCell.elevationUnit;
+                Toggle[] toggles = GetComponentsInChildren<Toggle>();
+                toggles[activeCell.color].isOn = true;
             }
         }
     }
@@ -77,7 +78,15 @@ public class SimpleMapEditor : MonoBehaviour
     {
         if (activeCell != null)
         {
-            activeCell.position.y = elevation * SimpleCell.elevationUnit; ;
+            activeCell.position.y = elevation * SimpleCell.elevationUnit;
+        }
+    }
+
+    public void SetColor(int colorIndex)
+    {
+        if (activeCell != null)
+        {
+            activeCell.color = colorIndex;
         }
     }
 }

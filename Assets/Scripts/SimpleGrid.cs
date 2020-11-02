@@ -15,6 +15,9 @@ public class SimpleGrid : MonoBehaviour
 
     SimpleMesh mesh;
 
+    // Color info
+    int defaultColor = 0;
+
     // Called when the script is loaded
     void Awake()
     {
@@ -36,6 +39,8 @@ public class SimpleGrid : MonoBehaviour
                 cell.transform.SetParent(this.transform, false);
 
                 cell.coordinates = new CellCoordinates(x - z / 2, z);
+
+                cell.color = 0;
 
                 cells[cell.coordinates] = cell;
             }
