@@ -70,4 +70,9 @@ public class SimpleGrid : MonoBehaviour
             return null;
         }
     }
+
+    public Dictionary<CellCoordinates, SimpleCell> GetCells()
+    {
+        return cells;
+    }
 }
