@@ -93,14 +93,13 @@ public class SimpleMapEditor : MonoBehaviour
     public void RandomizeCells()
     {
         Dictionary<CellCoordinates, SimpleCell> cells = simpleGrid.GetCells();
-        System.Random random = new System.Random();
 
         foreach (SimpleCell cell in cells.Values)
         {
-            int elevation = random.Next(8);
+            int elevation = (int)(Mathf.Pow(Noise.noiseMethods[(int)NoiseMethodType.Perlin][2](cell.position, 0.02f) + 1f, 3) * 2f);
 
             cell.position.y = elevation * SimpleCell.elevationUnit;
-            cell.color = random.Next(8);
+            cell.color = elevation;
         }
     }
 }

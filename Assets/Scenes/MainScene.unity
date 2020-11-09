@@ -3471,8 +3471,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cellPrefab: {fileID: 5322060442439222228, guid: 30fd997cc67c68240ba25e5724872e05,
     type: 3}
-  width: 28
-  height: 66
+  width: 40
+  height: 30
 --- !u!1 &1991386930
 GameObject:
   m_ObjectHideFlags: 0

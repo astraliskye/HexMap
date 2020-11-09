@@ -20,7 +20,7 @@ public class SimpleCell : MonoBehaviour
         new Vector3(0, 0, radius)
     };
 
-    public static float elevationUnit = 1.5f;
+    public static float elevationUnit = 3f;
 
     public Vector3 position;
     public int color;
