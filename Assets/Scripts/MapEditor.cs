@@ -1,19 +1,21 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 // User interface for editing the grid's mesh(es)
-public class SimpleMapEditor : MonoBehaviour
+public class MapEditor : MonoBehaviour
 {
     [SerializeField]
-    SimpleGrid simpleGrid;
+    GameGrid gameGrid;
 
     Slider slider;
-    SimpleCell activeCell;
+    Cell activeCell;
 
-    // Called when the script is loaded
+    int randomSeed = 42;
+    float randomness = 100f;
+
+    // Called when the script is being loaded
     private void Awake()
     {
         slider = GetComponentInChildren<Slider>();
@@ -35,10 +37,10 @@ public class SimpleMapEditor : MonoBehaviour
             {
                 Vector3 hitPosition = hit.point; // transform.InverseTransformPoint(hit.point);
 
-                float x = hitPosition.x / (SimpleCell.apothem * 2);
+                float x = hitPosition.x / (Cell.apothem * 2);
                 float y = -x;
 
-                float offset = hitPosition.z / (SimpleCell.radius * 3f);
+                float offset = hitPosition.z / (Cell.radius * 3f);
                 x -= offset;
                 y -= offset;
 
@@ -65,8 +67,8 @@ public class SimpleMapEditor : MonoBehaviour
                         zCoord = -xCoord - yCoord;
                     }
                 }
-                activeCell = simpleGrid.GetCell(new CellCoordinates(xCoord, zCoord));
-                slider.value = activeCell.position.y / SimpleCell.elevationUnit;
+                activeCell = gameGrid.cells[new CellCoordinates(xCoord, zCoord).GridX + zCoord * gameGrid.width];
+                slider.value = activeCell.position.y / Cell.elevationUnit;
                 Toggle[] toggles = GetComponentsInChildren<Toggle>();
                 toggles[activeCell.color].isOn = true;
             }
@@ -78,7 +80,8 @@ public class SimpleMapEditor : MonoBehaviour
     {
         if (activeCell != null)
         {
-            activeCell.position.y = elevation * SimpleCell.elevationUnit;
+            activeCell.position.y = elevation * Cell.elevationUnit;
+            activeCell.chunk.Refresh();
         }
     }
 
@@ -87,19 +90,40 @@ public class SimpleMapEditor : MonoBehaviour
         if (activeCell != null)
         {
             activeCell.color = colorIndex;
+            activeCell.chunk.Refresh();
         }
     }
 
+    public void SetSeed(int seed)
+    {
+        randomSeed = seed;
+    }
+
+    public void SetRandomness(float randomness)
+    {
+        this.randomness = randomness;
+    }    
+
     public void RandomizeCells()
     {
-        Dictionary<CellCoordinates, SimpleCell> cells = simpleGrid.GetCells();
+        List<Cell> cells = gameGrid.cells;
 
-        foreach (SimpleCell cell in cells.Values)
+        Random.InitState(randomSeed);
+        Vector3 offset = new Vector3(Random.Range(0f, randomness), Random.Range(0f, randomness), Random.Range(0f, randomness));
+
+        foreach (Cell cell in cells)
         {
-            int elevation = (int)(Mathf.Pow(Noise.noiseMethods[(int)NoiseMethodType.Perlin][2](cell.position, 0.02f) + 1f, 3) * 2f);
+            int elevation = (int)(Mathf.Pow(Noise.noiseMethods[(int)NoiseMethodType.Perlin][2](cell.position, 0.05f) + 1f, 1f) * 4f);
 
-            cell.position.y = elevation * SimpleCell.elevationUnit;
+            cell.position.y = elevation * Cell.elevationUnit;
             cell.color = elevation;
+        }
+
+        List<Chunk> chunks = gameGrid.chunks;
+
+        foreach(Chunk chunk in chunks)
+        {
+            chunk.Refresh();
         }
     }
 }

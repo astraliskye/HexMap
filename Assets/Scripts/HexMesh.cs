@@ -1,10 +1,13 @@
-﻿using System.Collections;
+﻿/*
+ *  name:       HexMesh.cs
+ *  purpose:    This class is responsible for triangulating a mesh from a set of
+ *              given cells
+ */
 using System.Collections.Generic;
 using UnityEngine;
 
-// A class for triangulating a mesh of hexagons
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
-public class SimpleMesh : MonoBehaviour
+public class HexMesh : MonoBehaviour
 {
     // Mesh data
     List<Vector3> vertices;
@@ -15,9 +18,8 @@ public class SimpleMesh : MonoBehaviour
     public Color[] colorPallet;
 
     MeshCollider meshCollider;
-    Dictionary<CellCoordinates, SimpleCell> cells;
 
-    // Called when script is loaded
+    // Called when script is being loaded
     void Awake()
     {
         // Initialize mesh data
@@ -26,22 +28,18 @@ public class SimpleMesh : MonoBehaviour
         colors = new List<Color>();
         GetComponent<MeshFilter>().mesh = mesh = new Mesh();
 
-        // Get mesh collider
         meshCollider = GetComponent<MeshCollider>();
     }
 
-    // Triangulate a list of cells
-    public void Triangulate(Dictionary<CellCoordinates, SimpleCell> cells)
+    public void Triangulate(List<Cell> cells)
     {
-        this.cells = cells;
-
-        // Trash old mesh data if mesh has previously been triangulated
+        // Reset mesh data
         vertices.Clear();
         triangles.Clear();
         colors.Clear();
 
         // Generate mesh data
-        foreach (SimpleCell cell in cells.Values)
+        foreach (Cell cell in cells)
         {
             Triangulate(cell);
         }
@@ -58,42 +56,35 @@ public class SimpleMesh : MonoBehaviour
 
 
     // Triangulate a single cell
-    void Triangulate(SimpleCell cell)
+    void Triangulate(Cell cell)
     {
+        // Triangulate cell proper
         Vector3 center = cell.position;
 
         for (int i = 0; i < 6; i++)
         {
             AddTriangle(
                 center,
-                center + SimpleCell.points[i],
-                center + SimpleCell.points[i + 1],
+                center + Cell.points[i],
+                center + Cell.points[i + 1],
                 colorPallet[cell.color]);
         }
 
+        // Triangulate cell connections
         for (int i = 0; i < 3; i++)
         {
-            CellCoordinates neighborCoordinates = CellCoordinates.GetNeighbor(cell.coordinates, i);
-            SimpleCell neighbor;
-
-            try
+            if (cell.neighbors[i] != null)
             {
-                neighbor = cells[neighborCoordinates];
-            }
-            catch (KeyNotFoundException)
-            {
-                continue;
-            }
+                Vector3 neighborCenter = cell.neighbors[i].position;
 
-            Vector3 neighborCenter = neighbor.position;
-
-            AddQuad(
-                center + SimpleCell.points[i + 1],
-                center + SimpleCell.points[i],
-                neighborCenter + SimpleCell.points[i + 4],
-                neighborCenter + SimpleCell.points[i + 3],
-                new Color(205f / 255, 133f / 255, 63f / 255)
-                );
+                AddQuad(
+                    center + Cell.points[i + 1],
+                    center + Cell.points[i],
+                    neighborCenter + Cell.points[i + 4],
+                    neighborCenter + Cell.points[i + 3],
+                    new Color(205f / 255, 133f / 255, 63f / 255)
+                    );
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿/*
- *  Class to keep track of a cell's coordinates relative to offset coordintaes and hex coordinates
- *  and provide utility functions related to coordinates.
+ *  name:       CellCoordinates.cs
+ *  purpose:    Class to keep track of a cell's coordintates and convert between
+ *              the grid's offset x coordinates and the cell's non-offset x coordinate
  */
 
 public struct CellCoordinates

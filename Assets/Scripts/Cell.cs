@@ -1,9 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿/*
+ *  name:       Cell.cs
+ *  purpose:    Contain attributes that are the same for every cell
+ *              and other data that will make creating and modifying
+ *              the grid easier
+ */
 using UnityEngine;
 
-// Class to keep track of cell metrics and coordinates
-public class SimpleCell : MonoBehaviour
+public class Cell : MonoBehaviour
 {
     // Static variables that apply to every cell
     public static float radius = 3f;
@@ -25,7 +28,11 @@ public class SimpleCell : MonoBehaviour
     public Vector3 position;
     public int color;
 
+    public Cell[] neighbors = { null, null, null, null, null, null };
+
     // Cell coordinates
     [SerializeField]
     public CellCoordinates coordinates;
+
+    public Chunk chunk;
 }
