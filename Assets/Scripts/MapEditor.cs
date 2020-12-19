@@ -13,7 +13,7 @@ public class MapEditor : MonoBehaviour
     Cell activeCell;
 
     int randomSeed = 42;
-    float randomness = 100f;
+    float randomness = 10000f;
 
     // Called when the script is being loaded
     private void Awake()
@@ -99,29 +99,36 @@ public class MapEditor : MonoBehaviour
         randomSeed = seed;
     }
 
-    public void SetRandomness(float randomness)
-    {
-        this.randomness = randomness;
-    }    
-
     public void RandomizeCells()
     {
-        List<Cell> cells = gameGrid.cells;
+        // Random.InitState(randomSeed);
 
-        Random.InitState(randomSeed);
-        Vector3 offset = new Vector3(Random.Range(0f, randomness), Random.Range(0f, randomness), Random.Range(0f, randomness));
+        // Assign chunks a random, but smoothly differing elevation
+        // 
+        List<Chunk> chunks = gameGrid.chunks;
+
+        float chunkOffsetX = Random.Range(0f, randomness);
+        float chunkOffsetZ = Random.Range(0f, randomness);
+
+        foreach (Chunk chunk in chunks)
+        {
+            chunk.elevation = (Noise.noiseMethods[(int)NoiseMethodType.Perlin][2](new Vector3(chunkOffsetX + chunk.coordinates.Item1, 0, chunkOffsetZ + chunk.coordinates.Item2), 0.001f) + 1f) * 2;
+
+            if (chunk.elevation < 0) chunk.elevation = 0;
+        }
+
+        List<Cell> cells = gameGrid.cells;
+        Vector3 elevationOffset = new Vector3(Random.Range(0f, randomness), Random.Range(0f, randomness), Random.Range(0f, randomness));
 
         foreach (Cell cell in cells)
         {
-            int elevation = (int)(Mathf.Pow(Noise.noiseMethods[(int)NoiseMethodType.Perlin][2](cell.position, 0.05f) + 1f, 1f) * 4f);
+            float elevation = Noise.Sum(Noise.noiseMethods[(int)NoiseMethodType.Perlin][2], cell.position + elevationOffset, 0.001f, 4, 2f, 0.5f) * Cell.numElevations / 4;
+            Mathf.Clamp(elevation, 0f, 100f);
 
-            cell.position.y = elevation * Cell.elevationUnit;
-            cell.color = elevation;
+            cell.position.y = (int)(elevation * cell.chunk.elevation) * Cell.elevationUnit;
         }
 
-        List<Chunk> chunks = gameGrid.chunks;
-
-        foreach(Chunk chunk in chunks)
+        foreach (Chunk chunk in chunks)
         {
             chunk.Refresh();
         }

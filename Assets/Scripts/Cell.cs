@@ -24,6 +24,7 @@ public class Cell : MonoBehaviour
     };
 
     public static float elevationUnit = 3f;
+    public static float numElevations = 64;
 
     public Vector3 position;
     public int color;

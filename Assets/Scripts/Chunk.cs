@@ -10,9 +10,10 @@ using UnityEngine;
 public class Chunk : MonoBehaviour
 {
     // Chunk data
-    public static int size = 40;
+    public static int size = 16;
     public List<Cell> cells = new List<Cell>();
     public (int, int) coordinates;
+    public float elevation;
 
     HexMesh mesh;
 

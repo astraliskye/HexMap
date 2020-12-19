@@ -10,9 +10,9 @@ using UnityEngine;
 public class HexMesh : MonoBehaviour
 {
     // Mesh data
-    List<Vector3> vertices;
-    List<int> triangles;
-    List<Color> colors;
+    static List<Vector3> vertices;
+    static List<int> triangles;
+    static List<Color> colors;
     Mesh mesh;
 
     public Color[] colorPallet;
