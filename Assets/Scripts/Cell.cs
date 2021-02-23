@@ -23,7 +23,7 @@ public class Cell : MonoBehaviour
         new Vector3(0, 0, radius)
     };
 
-    public static float elevationUnit = 3f;
+    public static float elevationUnit = apothem;
     public static float numElevations = 64;
 
     public Vector3 position;

@@ -38,9 +38,9 @@ public class GameGrid : MonoBehaviour
         }
 
         // Instantiate cells
-        for (int z = 0; z < height; z++)
+        for (int z = 0; z < height * Chunk.size; z++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < width * Chunk.size; x++)
             {
                 InstantiateCell(x, z);
             }
