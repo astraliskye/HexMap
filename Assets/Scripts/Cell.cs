@@ -1,39 +1,24 @@
-﻿/*
- *  name:       Cell.cs
- *  purpose:    Contain attributes that are the same for every cell
- *              and other data that will make creating and modifying
- *              the grid easier
- */
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class Cell : MonoBehaviour
+public class Cell
 {
-    // Static variables that apply to every cell
-    public static float radius = 3f;
-    public static float apothem = 0.86602540378f * radius;
+    public static float radius = 1f;
+    public static float apothem = radius * Mathf.Cos(Mathf.PI / 6);
+    public static float heightUnit = .5f;
 
-    public static Vector3[] points =
+    public static Vector3[] corners =
     {
         new Vector3(0, 0, radius),
-        new Vector3(apothem, 0, radius * 0.5f),
-        new Vector3(apothem, 0, -radius * 0.5f),
+        new Vector3(apothem, 0, radius / 2f),
+        new Vector3(apothem, 0, -radius / 2f),
         new Vector3(0, 0, -radius),
-        new Vector3(-apothem, 0, -radius * 0.5f),
-        new Vector3(-apothem, 0, radius * 0.5f),
+        new Vector3(-apothem, 0, -radius / 2f),
+        new Vector3(-apothem, 0, radius / 2f),
         new Vector3(0, 0, radius)
     };
 
-    public static float elevationUnit = apothem;
-    public static float numElevations = 64;
-
-    public Vector3 position;
-    public int color;
-
-    public Cell[] neighbors = { null, null, null, null, null, null };
-
-    // Cell coordinates
-    [SerializeField]
-    public CellCoordinates coordinates;
-
-    public Chunk chunk;
+    public int type = 1;
+    public Vector3 localPosition = new Vector3(0, 0, 0);
 }

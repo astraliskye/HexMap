@@ -198,7 +198,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 553646535}
   m_LocalRotation: {x: 0.4708088, y: -0, z: -0, w: 0.8822353}
-  m_LocalPosition: {x: 497, y: 647, z: -53}
+  m_LocalPosition: {x: 92, y: 155, z: 4.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -339,11 +339,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff23045b96a2a144ea258c772f6aaa57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cellPrefab: {fileID: 5322060442439222228, guid: 30fd997cc67c68240ba25e5724872e05,
-    type: 3}
   chunkPrefab: {fileID: 6204069509083064662, guid: 0bd17ccae160a0041a675906cd13f5b1,
     type: 3}
-  width: 2
-  height: 2
-  cells: []
+  waterLevel: 20
+  width: 8
+  height: 10
   chunks: []
