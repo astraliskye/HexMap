@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1797642596870421599}
   - component: {fileID: 6204069509083064662}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Chunk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -44,8 +44,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e812ea8f4da04e54eae5fd441bf5875e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cells: []
-  type: 0
+  cells: 
+  neighbors: []
 --- !u!1 &8977547086055950388
 GameObject:
   m_ObjectHideFlags: 0
@@ -59,7 +59,7 @@ GameObject:
   - component: {fileID: 5422901278628358550}
   - component: {fileID: 8195885041713708621}
   - component: {fileID: 5246387920330559890}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: HexMesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -153,12 +153,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40996958a0fc09840918ca8a1b76b319, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  colorPallet:
-  - {r: 0.5287521, g: 0.5660378, b: 0, a: 0}
-  - {r: 1, g: 0.94850254, b: 0.43867922, a: 0}
-  - {r: 0.13231826, g: 1, b: 0, a: 0}
-  - {r: 1, g: 1, b: 1, a: 0}
-  - {r: 0.35136676, g: 0.4056604, b: 0, a: 0}
-  - {r: 0.0907256, g: 0.4056604, b: 0, a: 0}
-  - {r: 0.010801733, g: 0.18867922, b: 0, a: 0}
-  - {r: 0.38601542, g: 0.30838376, b: 0.3962264, a: 0}

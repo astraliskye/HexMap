@@ -1,61 +1,91 @@
 ﻿using UnityEngine;
 using NoiseTest;
+using System.Collections;
 
 public class Chunk : MonoBehaviour
 {
-    public static int size = 16;
-    public Cell[] cells;
+    public const int SIZE = 16;
+    public const int MAX_HEIGHT = 128;
+
+    public int[] cells;
     public (int, int) coordinates;
 
     HexMesh mesh;
 
-    OpenSimplexNoise noiseGenerator;
-
     void Awake()
     {
         mesh = GetComponentInChildren<HexMesh>();
-        noiseGenerator = new OpenSimplexNoise(8);
     }
 
-    void Start()
+    public void TriangulateMesh()
     {
-        mesh.Triangulate(cells);
+        mesh.Triangulate(this);
     }
 
     public void GenerateCells(int waterLevel = 0)
     {
-        cells = new Cell[size * size];
+        cells = new int[SIZE * SIZE * MAX_HEIGHT];
 
-        for (int i = 0; i < size; i++)
+        for (int z = 0; z < SIZE; z++)
         {
-            for (int j = 0; j < size; j++)
+            for (int x = 0; x < SIZE; x++)
             {
-                Cell cell = new Cell
+                Vector3 cellPosition = Cell.GetPositionByCoordinates(x + coordinates.Item1 * SIZE, z + coordinates.Item2 * SIZE);
+
+                float rawHeight = 0;
+
+                float amplitude = 1f;
+                float totalAmplitude = 0f;
+                float frequency = 64f;
+
+                for (int k = 0; k < 8; k++)
                 {
-                    localPosition = new Vector3(j * Cell.apothem * 2 + (i % 2) * Cell.apothem, 0, i * Cell.radius * 1.5f),
-                    type = 1
-                };
+                    rawHeight += (float)(amplitude * (World.noiseGenerator.Evaluate(cellPosition.x / frequency, cellPosition.z / frequency, 0) + 1));
 
-                float worldX = cell.localPosition.x + transform.position.x;
-                float worldZ = cell.localPosition.z + transform.position.z;
+                    totalAmplitude += amplitude;
+                    amplitude *= 0.5f;
+                    frequency /= 2;
+                }
 
-                float rawHeight = (float)(noiseGenerator.Evaluate(worldX / 16f, worldZ / 16f, 0) + 1f) * 32f;
+                rawHeight /= totalAmplitude * 2;
 
-                // float heightModifier = ((float)(noiseGenerator.Evaluate((cell.localPosition.x + transform.position.x) / 64f, (cell.localPosition.z + transform.position.z) / 64f, 0) + 1f)) / 2f;
-                float heightModifier = -(1f/15000) * Mathf.Pow(worldX - 105, 2) - (1f / 15000) * Mathf.Pow(worldZ - 120, 2) + 1f;
+                float heightModifier = (float)(World.noiseGenerator.Evaluate(cellPosition.x / 97f, cellPosition.z / 97f, 0) + 1f) / 2f;
                 if (heightModifier < 0) heightModifier = 0;
 
                 float modifiedHeight = rawHeight * heightModifier;
-                int height = (int)modifiedHeight;
+                int height = (int)(modifiedHeight * MAX_HEIGHT);
 
-                if (height < waterLevel) cell.type = 2;
+                int type = 1;
 
-                cell.localPosition += new Vector3(0, height * Cell.heightUnit, 0);
+                if (height < waterLevel) type = 2;
+                else if (height < waterLevel + 2) type = 3;
 
-                cells[j + i * size] = cell;
+
+                GenerateColumn(x, z, height, type);
             }
         }
+    }
 
-        mesh.Triangulate(cells);
+    void GenerateColumn(int x, int z, int height, int type)
+    {
+        int columnIndex = 0;
+
+        while (columnIndex < height - 1)
+        {
+            cells[columnIndex + x * MAX_HEIGHT + z * MAX_HEIGHT * SIZE] = 1;
+
+            columnIndex++;
+        }
+
+        cells[columnIndex + x * MAX_HEIGHT + z * MAX_HEIGHT * SIZE] = type;
+
+        columnIndex++;
+
+        while (columnIndex < MAX_HEIGHT)
+        {
+            cells[columnIndex + x * MAX_HEIGHT + z * MAX_HEIGHT * SIZE] = 0;
+
+            columnIndex++;
+        }
     }
 }
