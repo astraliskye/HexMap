@@ -352,7 +352,7 @@ GameObject:
   - component: {fileID: 1962347777}
   - component: {fileID: 1962347778}
   m_Layer: 0
-  m_Name: Grid
+  m_Name: World
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -384,12 +384,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff23045b96a2a144ea258c772f6aaa57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chunkPrefab: {fileID: 6204069509083064662, guid: 0bd17ccae160a0041a675906cd13f5b1,
+  chunkPrefab: {fileID: 5377198672648822446, guid: 0bd17ccae160a0041a675906cd13f5b1,
     type: 3}
-  playerTransform: {fileID: 2042112774}
-  waterLevel: 30
-  width: 16
-  height: 16
+  player: {fileID: 2042112774}
+  distance: 5
 --- !u!1 &2042112772
 GameObject:
   m_ObjectHideFlags: 0

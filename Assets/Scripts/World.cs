@@ -1,62 +1,62 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using NoiseTest;
+using System.Collections;
 
 public class World : MonoBehaviour
 {
     public Chunk chunkPrefab;
-    public Transform playerTransform;
+    public Transform player;
 
-    [Range(1, 30)]
-    public int waterLevel = 12;
-    public int width = 4, height = 3;
+    public int distance = 5;
 
-    public static OpenSimplexNoise noiseGenerator;
-    public static Dictionary<(int, int), Chunk> chunks;
-    public static Dictionary<(int, int), bool> shouldTriangulate;
+    public static OpenSimplexNoise noiseGenerator = new OpenSimplexNoise();
+    public static Dictionary<(int x, int z), Chunk> chunks = new Dictionary<(int x, int z), Chunk>();
+
+    (int x, int z) playerCurrentChunk = (-1, -1);
 
     private void Awake()
     {
-        noiseGenerator = new OpenSimplexNoise();
-        chunks = new Dictionary<(int, int), Chunk>();
-        shouldTriangulate = new Dictionary<(int, int), bool>();
-        Generate(0, 0);
+        GenerateChunks();
     }
 
     private void Update()
     {
-        Generate((int)(playerTransform.position.x / (Chunk.SIZE * Cell.apothem * 2)), (int)(playerTransform.position.z / (Chunk.SIZE * Cell.radius * 1.5f)));
+        GenerateChunks();
     }
 
-    void Generate(int playerX, int playerZ)
+    void GenerateChunks()
     {
-        for (int z = -height * 2 + playerZ; z < height * 2 + playerZ; z++)
-        {
-            for (int x = -width * 2 + playerX; x < width * 2 + playerX; x++)
-            {
-                if (!chunks.ContainsKey((x, z)))
-                {
-                    Chunk chunk = Instantiate<Chunk>(chunkPrefab);
-                    chunk.coordinates = (x, z);
-                    chunk.GenerateCells(waterLevel);
-                    chunk.transform.position = new Vector3(x * Cell.apothem * 2 * Chunk.SIZE, 0, z * Cell.radius * 1.5f * Chunk.SIZE);
+        int playerX = (int)(player.position.x / Chunk.WIDTH);
+        int playerZ = (int)(player.position.z / Chunk.LENGTH);
 
-                    chunk.transform.SetParent(this.transform, false);
-                    chunks.Add((x, z), chunk);
+        if (playerCurrentChunk.x != playerX || playerCurrentChunk.z != playerZ)
+        {
+            playerCurrentChunk.x = playerX;
+            playerCurrentChunk.z = playerZ;
+
+            for (int z = -distance + playerZ; z < distance + playerZ; z++)
+            {
+                for (int x = -distance + playerX; x < distance + playerX; x++)
+                {
+                    if (!chunks.ContainsKey((x, z)))
+                    {
+                        BuildChunk(x, z);
+                    }
                 }
             }
         }
+    }
 
-        for (int z = -height + playerZ; z < height + playerZ; z++)
-        {
-            for (int x = -width + playerX; x < width + playerX; x++)
-            {
-                if (!shouldTriangulate.ContainsKey((x, z)) || shouldTriangulate[(x, z)])
-                {
-                    chunks[(x, z)].TriangulateMesh();
-                    shouldTriangulate[(x, z)] = false;
-                }
-            }
-        }
+    void BuildChunk(int x, int z)
+    {
+        Chunk chunk = Instantiate<Chunk>(chunkPrefab);
+        chunks.Add((x, z), chunk);
+
+        chunk.transform.position = new Vector3(x * Chunk.WIDTH, 0, z * Chunk.LENGTH);
+        chunk.transform.SetParent(this.transform, false);
+        chunk.coordinates = (x, z);
+        chunk.GenerateCells();
+        chunk.TriangulateMesh();
     }
 }

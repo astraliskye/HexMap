@@ -4,58 +4,55 @@ using UnityEngine;
 
 public class Cell
 {
-    public static float radius = 1f;
-    public static float apothem = radius * Mathf.Cos(Mathf.PI / 6);
-    public static float heightUnit = 1f;
+    public const float RADIUS = 1f;
+    public const float APOTHEM = RADIUS * 0.86602540f;
+    public const float HEIGHT = 1f;
 
     public static Vector3[] corners =
     {
-        new Vector3(0, 0, radius),
-        new Vector3(apothem, 0, radius / 2f),
-        new Vector3(apothem, 0, -radius / 2f),
-        new Vector3(0, 0, -radius),
-        new Vector3(-apothem, 0, -radius / 2f),
-        new Vector3(-apothem, 0, radius / 2f),
-        new Vector3(0, 0, radius)
+        new Vector3(0, 0, RADIUS),
+        new Vector3(APOTHEM, 0, RADIUS / 2f),
+        new Vector3(APOTHEM, 0, -RADIUS / 2f),
+        new Vector3(0, 0, -RADIUS),
+        new Vector3(-APOTHEM, 0, -RADIUS / 2f),
+        new Vector3(-APOTHEM, 0, RADIUS / 2f),
+        new Vector3(0, 0, RADIUS)
     };
 
     public static Cell[] cells =
     {
         new Cell
         {
-            name = "air",
-            tangible = false,
-            color = new Color(1, 1, 1)
+            topTerrain = new Vector2(0f, 0f),
+            sideTerrain = new Vector2(0f, 1f)
         },
         new Cell
         {
-            name = "dirt",
-            tangible =  true,
-            color = new Color(117f / 255, 65f / 255, 0)
+            topTerrain = new Vector2(2.0f, 0f),
+            sideTerrain = new Vector2(2.0f, 1f)
         },
         new Cell
         {
-            name = "water",
-            tangible = true,
-            color = new Color(3f / 255, 103f / 255, 161f / 255)
+            topTerrain = new Vector2(0f, 0f),
+            sideTerrain = new Vector2(1.0f, 1f)
         },
         new Cell
         {
-            name = "coast",
-            tangible = true,
-            color = new Color(242f / 255, 224f / 255, 131f / 255)
+            topTerrain = new Vector2(0f, 0f),
+            sideTerrain = new Vector2(0f, 1f)
         }
     };
 
-    public static Vector3 GetPositionByCoordinates(int x, int z)
+    public static Vector3 GetPositionFromCoordinates(int x, int z)
     {
-        float posX = x * Cell.apothem * 2 + (z % 2) * Cell.apothem;
-        float posZ = z * Cell.radius * 1.5f;
+        float posX = x * APOTHEM * 2 + (z % 2) * APOTHEM;
+        float posZ = z * RADIUS * 1.5f;
 
         return new Vector3(posX, 0, posZ);
     }
 
-    public string name;
-    public bool tangible = true;
-    public Color color;
+    public Vector2 topTerrain;
+    public Vector2 sideTerrain;
 }
+
+public enum CellType { AIR = 0, DIRT = 1, GRASS = 2, WATER = 3 };
