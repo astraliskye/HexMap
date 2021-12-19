@@ -1,21 +1,16 @@
 ﻿using UnityEngine;
-using NoiseTest;
 using System.Collections.Generic;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public class Chunk : MonoBehaviour
 {
-    public const int SIZE = 16;
-    public const int HEIGHT = 64;
-    public const float WIDTH = Cell.APOTHEM * 2f * SIZE;
-    public const float LENGTH = Cell.RADIUS * 1.5f * SIZE;
+    public const int chunkWidth = 8;
+    public const int chunkLength = 8;
+    public const int chunkHeight = 128;
 
-    public CellType[,,] cells = new CellType[SIZE, HEIGHT, SIZE];
-    public (int, int) coordinates;
-
-    static List<Vector3> vertices = new List<Vector3>();
-    static List<int> triangles = new List<int>();
-    static List<Vector2> topTerrainTypes = new List<Vector2>();
+    int[,,] cells;
+    List<Vector3> vertices = new List<Vector3>();
+    List<int> triangles = new List<int>();
 
     Mesh mesh;
     MeshCollider meshCollider;
@@ -23,377 +18,165 @@ public class Chunk : MonoBehaviour
     void Awake()
     {
         GetComponent<MeshFilter>().mesh = mesh = new Mesh();
-        mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
         meshCollider = GetComponent<MeshCollider>();
     }
 
-    public void GenerateCells()
+    private void OnDrawGizmos()
     {
-        for (int z = 0; z < SIZE; z++)
-        {
-            for (int x = 0; x < SIZE; x++)
-            {
-                for (int y = 0; y < HEIGHT; y++)
-                {
-                    cells[x, y, z] = GetCellType(x, y, z);
-                }
-            }
-        }
+        Gizmos.DrawWireMesh(mesh, 0, transform.position);
     }
 
-    public void TriangulateMesh()
+    public void AddCells(int[,,] cells)
     {
+        this.cells = cells;
+    }
+
+    public static Vector3 chunkPositionFromCoordinates((int x, int z) chunkCoordinates)
+    {
+        return new Vector3(
+            chunkCoordinates.x * CellInfo.apothem * 2 * chunkWidth,
+            0,
+            chunkCoordinates.z * CellInfo.radius * 1.5f * chunkLength
+            );
+    }
+
+    public void Triangulate(int[,,] north, int[,,] northeast, int[,,] east, int[,,] south, int[,,] southwest, int[,,] west)
+    {
+        mesh.Clear();
         vertices.Clear();
         triangles.Clear();
-        topTerrainTypes.Clear();
 
-        for (int z = 0; z < Chunk.SIZE; z++)
+        for (int z = 0; z < cells.GetLength(2); z++)
         {
-            for (int x = 0; x < Chunk.SIZE; x++)
+            for (int x = 0; x < cells.GetLength(0); x++)
             {
-                for (int y = 0; y < Chunk.HEIGHT; y++)
+                for (int y = 0; y < cells.GetLength(1); y++)
                 {
-                    Vector3 topCenter = Cell.GetPositionFromCoordinates(x, z);
-                    topCenter += new Vector3(0, y * Cell.HEIGHT, 0);
-
-                    CellType cellType = cells[x, y, z];
-
-                    if (cellType != CellType.AIR)
+                    // If the cell is not a zero, it should be rendered
+                    if (cells[x, y, z] != 0)
                     {
-                        if (y < HEIGHT - 1 && cells[x, y + 1, z] == CellType.AIR)
-                        {
+                        Vector3 center = CellInfo.cellPositionInChunk(x, y, z);
+
+                        // If the cell is the top cell
+                        // or if the cell above it is not a zero
+                        // Then render the top of the cell
+                        if (y == cells.GetLength(1) - 1 || cells[x, y + 1, z] == 0) {
                             for (int i = 0; i < 6; i++)
                             {
                                 AddTriangle(
-                                    topCenter,
-                                    topCenter + Cell.corners[i],
-                                    topCenter + Cell.corners[i + 1],
-                                    Cell.cells[(int)cellType].topTerrain);
-                            }
-                        }
-
-                        Vector3 bottomCenter = topCenter - new Vector3(0, Cell.HEIGHT, 0);
-
-                        // Left side
-                        if (x > 0)
-                        {
-                            // Left quad
-                            if (cells[x - 1, y, z] == CellType.AIR)
-                            {
-                                AddQuad(
-                                    topCenter + Cell.corners[5],
-                                    topCenter + Cell.corners[4],
-                                    bottomCenter + Cell.corners[4],
-                                    bottomCenter + Cell.corners[5],
-                                    Cell.cells[(int)cellType].sideTerrain
-                                    );
-                            }
-
-                            // Top left quad
-                            if (z < SIZE - 1)
-                            {
-                                if (z % 2 == 1 && cells[x, y, z + 1] == CellType.AIR)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[0],
-                                        topCenter + Cell.corners[5],
-                                        bottomCenter + Cell.corners[5],
-                                        bottomCenter + Cell.corners[0],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-                                else if (z % 2 == 0 && cells[x - 1, y, z + 1] == CellType.AIR)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[0],
-                                        topCenter + Cell.corners[5],
-                                        bottomCenter + Cell.corners[5],
-                                        bottomCenter + Cell.corners[0],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-                            }
-                            else
-                            {
-                                AddQuad(
-                                    topCenter + Cell.corners[0],
-                                    topCenter + Cell.corners[5],
-                                    bottomCenter + Cell.corners[5],
-                                    bottomCenter + Cell.corners[0],
-                                    Cell.cells[(int)cellType].sideTerrain
-                                    );
-                            }
-
-                            // Bottom left quad
-                            if (z > 0)
-                            {
-                                if (z % 2 == 0 && cells[x - 1, y, z - 1] == CellType.AIR)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[4],
-                                        topCenter + Cell.corners[3],
-                                        bottomCenter + Cell.corners[3],
-                                        bottomCenter + Cell.corners[4],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-                                else if (z % 2 == 1 && cells[x, y, z - 1] == CellType.AIR)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[4],
-                                        topCenter + Cell.corners[3],
-                                        bottomCenter + Cell.corners[3],
-                                        bottomCenter + Cell.corners[4],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-                            }
-                            else
-                            {
-                                AddQuad(
-                                    topCenter + Cell.corners[4],
-                                    topCenter + Cell.corners[3],
-                                    bottomCenter + Cell.corners[3],
-                                    bottomCenter + Cell.corners[4],
-                                    Cell.cells[(int)cellType].sideTerrain
+                                    center,
+                                    center + CellInfo.corners[i],
+                                    center + CellInfo.corners[(i + 1) % 6]
                                     );
                             }
                         }
-                        else
-                        {
-                            // Left quad
-                            AddQuad(
-                                topCenter + Cell.corners[5],
-                                topCenter + Cell.corners[4],
-                                bottomCenter + Cell.corners[4],
-                                bottomCenter + Cell.corners[5],
-                                Cell.cells[(int)cellType].sideTerrain
-                                );
 
-                            if (z % 2 == 0)
-                            {
-                                // Top left quad
-                                AddQuad(
-                                    topCenter + Cell.corners[0],
-                                    topCenter + Cell.corners[5],
-                                    bottomCenter + Cell.corners[5],
-                                    bottomCenter + Cell.corners[0],
-                                    Cell.cells[(int)cellType].sideTerrain
-                                    );
-
-                                // Bottom left quad
-                                AddQuad(
-                                    topCenter + Cell.corners[4],
-                                    topCenter + Cell.corners[3],
-                                    bottomCenter + Cell.corners[3],
-                                    bottomCenter + Cell.corners[4],
-                                    Cell.cells[(int)cellType].sideTerrain
-                                    );
-                            }
-                            else
-                            {
-                                if (z < SIZE - 1 && cells[x, y, z + 1] == CellType.AIR)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[0],
-                                        topCenter + Cell.corners[5],
-                                        bottomCenter + Cell.corners[5],
-                                        bottomCenter + Cell.corners[0],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-                                else if (z == SIZE - 1)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[0],
-                                        topCenter + Cell.corners[5],
-                                        bottomCenter + Cell.corners[5],
-                                        bottomCenter + Cell.corners[0],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-
-                                if (z > 0 && cells[x, y, z - 1] == CellType.AIR)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[4],
-                                        topCenter + Cell.corners[3],
-                                        bottomCenter + Cell.corners[3],
-                                        bottomCenter + Cell.corners[4],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-                                else if (z == 0)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[4],
-                                        topCenter + Cell.corners[3],
-                                        bottomCenter + Cell.corners[3],
-                                        bottomCenter + Cell.corners[4],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-                            }
-                        }
-
-                        // Right side
-                        if (x < SIZE - 1)
-                        {
-                            // Right quad
-                            if (cells[x + 1, y, z] == CellType.AIR)
-                            {
-                                AddQuad(
-                                    topCenter + Cell.corners[2],
-                                    topCenter + Cell.corners[1],
-                                    bottomCenter + Cell.corners[1],
-                                    bottomCenter + Cell.corners[2],
-                                    Cell.cells[(int)cellType].sideTerrain
-                                    );
-                            }
-
-                            // Top right quad
-                            if (z < SIZE - 1)
-                            {
-                                if (z % 2 == 1 && cells[x + 1, y, z + 1] == CellType.AIR)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[1],
-                                        topCenter + Cell.corners[0],
-                                        bottomCenter + Cell.corners[0],
-                                        bottomCenter + Cell.corners[1],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-                                else if (z % 2 == 0 && cells[x, y, z + 1] == CellType.AIR)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[1],
-                                        topCenter + Cell.corners[0],
-                                        bottomCenter + Cell.corners[0],
-                                        bottomCenter + Cell.corners[1],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-                            }
-                            else
-                            {
-                                AddQuad(
-                                    topCenter + Cell.corners[1],
-                                    topCenter + Cell.corners[0],
-                                    bottomCenter + Cell.corners[0],
-                                    bottomCenter + Cell.corners[1],
-                                    Cell.cells[(int)cellType].sideTerrain
-                                    );
-                            }
-
-                            // Bottom right quad
-                            if (z > 0)
-                            {
-                                if (z % 2 == 0 && cells[x, y, z - 1] == CellType.AIR)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[3],
-                                        topCenter + Cell.corners[2],
-                                        bottomCenter + Cell.corners[2],
-                                        bottomCenter + Cell.corners[3],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-                                else if (z % 2 == 1 && cells[x + 1, y, z - 1] == CellType.AIR)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[3],
-                                        topCenter + Cell.corners[2],
-                                        bottomCenter + Cell.corners[2],
-                                        bottomCenter + Cell.corners[3],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-                            }
-                            else
-                            {
-                                AddQuad(
-                                    topCenter + Cell.corners[3],
-                                    topCenter + Cell.corners[2],
-                                    bottomCenter + Cell.corners[2],
-                                    bottomCenter + Cell.corners[3],
-                                    Cell.cells[(int)cellType].sideTerrain
-                                    );
-                            }
-                        }
-                        else
+                        // If the cell is inside the chunk and the cell to its left is a zero
+                        // or if the cell to its left in the neighboring chunk a zero
+                        // Then render the left edge of the cell
+                        if (x > 0 && cells[x - 1, y, z] == 0
+                            || x == 0 && west != null && west[west.GetLength(0) - 1, y, z] == 0)
                         {
                             AddQuad(
-                                topCenter + Cell.corners[2],
-                                topCenter + Cell.corners[1],
-                                bottomCenter + Cell.corners[1],
-                                bottomCenter + Cell.corners[2],
-                                Cell.cells[(int)cellType].sideTerrain
-                                );
+                                center + CellInfo.corners[5],
+                                center + CellInfo.corners[4],
+                                center + CellInfo.corners[4] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                center + CellInfo.corners[5] + new Vector3(0, -CellInfo.cellHeight, 0));
+                        }
 
-                            if (z % 2 == 1)
-                            {
-                                // Top right quad
-                                AddQuad(
-                                    topCenter + Cell.corners[1],
-                                    topCenter + Cell.corners[0],
-                                    bottomCenter + Cell.corners[0],
-                                    bottomCenter + Cell.corners[1],
-                                    Cell.cells[(int)cellType].sideTerrain
-                                    );
+                        // If the cell is inside the chunk and the cell to its right is a zero
+                        // or if the cell to its right in the neighboring chunk a zero
+                        // Then render the right edge of the cell
+                        if (x < cells.GetLength(0) - 1 && cells[x + 1, y, z] == 0
+                            || x == cells.GetLength(0) - 1 && east != null && east[0, y, z] == 0)
+                        {
+                            AddQuad(
+                                center + CellInfo.corners[2],
+                                center + CellInfo.corners[1],
+                                center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                center + CellInfo.corners[2] + new Vector3(0, -CellInfo.cellHeight, 0));
+                        }
 
-                                // Bottom right quad
+                        // Render top left
+                        if (x > 0 && z < cells.GetLength(2) - 1)
+                        {
+                            if (z % 2 == 0 && cells[x - 1, y, z + 1] == 0) {
                                 AddQuad(
-                                    topCenter + Cell.corners[3],
-                                    topCenter + Cell.corners[2],
-                                    bottomCenter + Cell.corners[2],
-                                    bottomCenter + Cell.corners[3],
-                                    Cell.cells[(int)cellType].sideTerrain
-                                    );
+                                    center + CellInfo.corners[0],
+                                    center + CellInfo.corners[5],
+                                    center + CellInfo.corners[5] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0));
                             }
-                            else
+                            else if (z % 2 == 1 && cells[x, y, z + 1] == 0)
                             {
-                                if (z < SIZE - 1 && cells[x, y, z + 1] == CellType.AIR)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[1],
-                                        topCenter + Cell.corners[0],
-                                        bottomCenter + Cell.corners[0],
-                                        bottomCenter + Cell.corners[1],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-                                else if (z == SIZE - 1)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[1],
-                                        topCenter + Cell.corners[0],
-                                        bottomCenter + Cell.corners[0],
-                                        bottomCenter + Cell.corners[1],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
+                                AddQuad(
+                                    center + CellInfo.corners[0],
+                                    center + CellInfo.corners[5],
+                                    center + CellInfo.corners[5] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
+                        }
 
-                                if (z > 0 && cells[x, y, z - 1] == CellType.AIR)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[3],
-                                        topCenter + Cell.corners[2],
-                                        bottomCenter + Cell.corners[2],
-                                        bottomCenter + Cell.corners[3],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
-                                else if (z == 0)
-                                {
-                                    AddQuad(
-                                        topCenter + Cell.corners[3],
-                                        topCenter + Cell.corners[2],
-                                        bottomCenter + Cell.corners[2],
-                                        bottomCenter + Cell.corners[3],
-                                        Cell.cells[(int)cellType].sideTerrain
-                                        );
-                                }
+                        // Render top right
+                        if (x < cells.GetLength(0) - 1 && z < cells.GetLength(2) - 1)
+                        {
+                            if (z % 2 == 0 && cells[x, y, z + 1] == 0)
+                            {
+                                AddQuad(
+                                    center + CellInfo.corners[1],
+                                    center + CellInfo.corners[0],
+                                    center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
+                            else if (z % 2 == 1 && cells[x + 1, y, z + 1] == 0)
+                            {
+                                AddQuad(
+                                    center + CellInfo.corners[1],
+                                    center + CellInfo.corners[0],
+                                    center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
+                        }
+
+                        // Render bottom right
+                        if (x < cells.GetLength(0) - 1 && z > 0)
+                        {
+                            if (z % 2 == 0 && cells[x, y, z - 1] == 0)
+                            {
+                                AddQuad(
+                                    center + CellInfo.corners[3],
+                                    center + CellInfo.corners[2],
+                                    center + CellInfo.corners[2] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[3] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
+                            else if (z % 2 == 1 && cells[x + 1, y, z - 1] == 0)
+                            {
+                                AddQuad(
+                                    center + CellInfo.corners[3],
+                                    center + CellInfo.corners[2],
+                                    center + CellInfo.corners[2] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[3] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
+                        }
+
+                        // Render bottom left
+                        if (x > 0 && z > 0)
+                        {
+                            if (z % 2 == 0 && cells[x - 1, y, z - 1] == 0)
+                            {
+                                AddQuad(
+                                    center + CellInfo.corners[4],
+                                    center + CellInfo.corners[3],
+                                    center + CellInfo.corners[3] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[4] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
+                            else if (z % 2 == 1 && cells[x, y, z - 1] == 0)
+                            {
+                                AddQuad(
+                                    center + CellInfo.corners[4],
+                                    center + CellInfo.corners[3],
+                                    center + CellInfo.corners[3] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[4] + new Vector3(0, -CellInfo.cellHeight, 0));
                             }
                         }
                     }
@@ -403,62 +186,18 @@ public class Chunk : MonoBehaviour
 
         mesh.SetVertices(vertices);
         mesh.SetTriangles(triangles, 0);
-        mesh.SetUVs(0, topTerrainTypes);
         mesh.RecalculateNormals();
 
         meshCollider.sharedMesh = mesh;
     }
 
-    CellType GetCellType(int x, int y, int z)
+    void AddQuad(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
     {
-        Vector3 cellPosition = Cell.GetPositionFromCoordinates(x + coordinates.Item1 * SIZE, z + coordinates.Item2 * SIZE);
-
-        // Generate base height map
-        float rawHeight = 0;
-
-        float amplitude = 1f;
-        float totalAmplitude = 0f;
-        float frequency = 64f;
-
-        for (int k = 0; k < 8; k++)
-        {
-            rawHeight += (float)(amplitude * (World.noiseGenerator.Evaluate(cellPosition.x / frequency, cellPosition.z / frequency, 0) + 1));
-
-            totalAmplitude += amplitude;
-            amplitude *= 0.5f;
-            frequency /= 2;
-        }
-
-        rawHeight /= totalAmplitude * 2;
-
-        // Modify height map
-        float heightModifier = (float)(World.noiseGenerator.Evaluate(cellPosition.x / 97f, cellPosition.z / 97f, 0) + 1f) / 2f;
-        if (heightModifier < 0) heightModifier = 0;
-
-        float modifiedHeight = rawHeight * heightModifier;
-        int height = (int)(modifiedHeight * HEIGHT);
-
-        if (y < height)
-        {
-            return CellType.DIRT;
-        }
-        else if (y == height)
-        {
-            return CellType.GRASS;
-        }
-        else
-        {
-            return CellType.AIR;
-        }
+        AddTriangle(a, b, c);
+        AddTriangle(c, d, a);
     }
 
-    void AddQuad(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector2 sideTerrain)
-    {
-        AddTriangle(a, b, c, sideTerrain);
-        AddTriangle(c, d, a, sideTerrain);
-    }
-
-    void AddTriangle(Vector3 a, Vector3 b, Vector3 c, Vector2 topTerrain)
+    void AddTriangle(Vector3 a, Vector3 b, Vector3 c)
     {
         int currentIndex = vertices.Count;
 
@@ -469,9 +208,5 @@ public class Chunk : MonoBehaviour
         triangles.Add(currentIndex);
         triangles.Add(currentIndex + 1);
         triangles.Add(currentIndex + 2);
-
-        topTerrainTypes.Add(topTerrain);
-        topTerrainTypes.Add(topTerrain);
-        topTerrainTypes.Add(topTerrain);
     }
 }
