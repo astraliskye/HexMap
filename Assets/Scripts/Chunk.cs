@@ -57,9 +57,7 @@ public class Chunk : MonoBehaviour
                     {
                         Vector3 center = CellInfo.cellPositionInChunk(x, y, z);
 
-                        // If the cell is the top cell
-                        // or if the cell above it is not a zero
-                        // Then render the top of the cell
+                        // Render top
                         if (y == cells.GetLength(1) - 1 || cells[x, y + 1, z] == 0) {
                             for (int i = 0; i < 6; i++)
                             {
@@ -71,9 +69,7 @@ public class Chunk : MonoBehaviour
                             }
                         }
 
-                        // If the cell is inside the chunk and the cell to its left is a zero
-                        // or if the cell to its left in the neighboring chunk a zero
-                        // Then render the left edge of the cell
+                        // Left side
                         if (x > 0 && cells[x - 1, y, z] == 0
                             || x == 0 && west != null && west[west.GetLength(0) - 1, y, z] == 0)
                         {
@@ -84,9 +80,7 @@ public class Chunk : MonoBehaviour
                                 center + CellInfo.corners[5] + new Vector3(0, -CellInfo.cellHeight, 0));
                         }
 
-                        // If the cell is inside the chunk and the cell to its right is a zero
-                        // or if the cell to its right in the neighboring chunk a zero
-                        // Then render the right edge of the cell
+                        // Right side
                         if (x < cells.GetLength(0) - 1 && cells[x + 1, y, z] == 0
                             || x == cells.GetLength(0) - 1 && east != null && east[0, y, z] == 0)
                         {
@@ -97,7 +91,7 @@ public class Chunk : MonoBehaviour
                                 center + CellInfo.corners[2] + new Vector3(0, -CellInfo.cellHeight, 0));
                         }
 
-                        // Render top left
+                        // Top left
                         if (x > 0 && z < cells.GetLength(2) - 1)
                         {
                             if (z % 2 == 0 && cells[x - 1, y, z + 1] == 0) {
@@ -116,8 +110,24 @@ public class Chunk : MonoBehaviour
                                     center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0));
                             }
                         }
+                        else if (z == cells.GetLength(2) - 1 && north != null && north[x, y, 0] == 0)
+                        {
+                            AddQuad(
+                                    center + CellInfo.corners[0],
+                                    center + CellInfo.corners[5],
+                                    center + CellInfo.corners[5] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0));
+                        }
+                        else if (z < cells.GetLength(2) - 1 && x == 0 && west != null && west[west.GetLength(0) - 1, y, z + 1] == 0)
+                        {
+                            AddQuad(
+                                    center + CellInfo.corners[0],
+                                    center + CellInfo.corners[5],
+                                    center + CellInfo.corners[5] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0));
+                        }
 
-                        // Render top right
+                        // Top right
                         if (x < cells.GetLength(0) - 1 && z < cells.GetLength(2) - 1)
                         {
                             if (z % 2 == 0 && cells[x, y, z + 1] == 0)
@@ -137,8 +147,32 @@ public class Chunk : MonoBehaviour
                                     center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0));
                             }
                         }
+                        else if (x < cells.GetLength(0) - 1 & z == cells.GetLength(2) - 1 && north != null && north[x + 1, y, 0] == 0)
+                        {
+                            AddQuad(
+                                    center + CellInfo.corners[1],
+                                    center + CellInfo.corners[0],
+                                    center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0));
+                        }
+                        else if (x == cells.GetLength(0) - 1 && z == cells.GetLength(2) - 1 && northeast != null && northeast[0, y, 0] == 0)
+                        {
+                            AddQuad(
+                                    center + CellInfo.corners[1],
+                                    center + CellInfo.corners[0],
+                                    center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0));
+                        }
+                        else if (x == cells.GetLength(0) - 1 && z < cells.GetLength(2) - 1 && east != null && east[0, y, z + 1] == 0)
+                        {
+                            AddQuad(
+                                    center + CellInfo.corners[1],
+                                    center + CellInfo.corners[0],
+                                    center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0));
+                        }
 
-                        // Render bottom right
+                        // Bottom right
                         if (x < cells.GetLength(0) - 1 && z > 0)
                         {
                             if (z % 2 == 0 && cells[x, y, z - 1] == 0)
@@ -159,7 +193,7 @@ public class Chunk : MonoBehaviour
                             }
                         }
 
-                        // Render bottom left
+                        // Bottom left
                         if (x > 0 && z > 0)
                         {
                             if (z % 2 == 0 && cells[x - 1, y, z - 1] == 0)

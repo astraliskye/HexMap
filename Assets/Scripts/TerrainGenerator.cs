@@ -181,65 +181,43 @@ public class TerrainGenerator : MonoBehaviour
         chunk.AddCells(cells);
         chunks.Add(chunkPos, chunk);
 
-        chunk.Triangulate(
-            GetCellNeighbor(chunkPos, ChunkDirection.NORTH),
-            GetCellNeighbor(chunkPos, ChunkDirection.NORTHEAST),
-            GetCellNeighbor(chunkPos, ChunkDirection.EAST),
-            GetCellNeighbor(chunkPos, ChunkDirection.SOUTH),
-            GetCellNeighbor(chunkPos, ChunkDirection.SOUTHWEST),
-            GetCellNeighbor(chunkPos, ChunkDirection.WEST)
-        );
+        TriangulateChunk(chunkPos);
 
         for (int i = 0; i < 6; i++)
         {
-            Chunk neighbor = GetChunkNeighbor(chunkPos, (ChunkDirection)i);
+            (int, int) neighborPos = NeighborCoords(chunkPos, (ChunkDirection)i);
 
-            if (neighbor != null)
-                chunk.Triangulate(
-                    GetCellNeighbor(chunkPos, ChunkDirection.NORTH),
-                    GetCellNeighbor(chunkPos, ChunkDirection.NORTHEAST),
-                    GetCellNeighbor(chunkPos, ChunkDirection.EAST),
-                    GetCellNeighbor(chunkPos, ChunkDirection.SOUTH),
-                    GetCellNeighbor(chunkPos, ChunkDirection.SOUTHWEST),
-                    GetCellNeighbor(chunkPos, ChunkDirection.WEST)
-                );
+            if (chunks.ContainsKey(neighborPos))
+                TriangulateChunk(neighborPos);
         }
     }
 
-    public static int[,,] GetCellNeighbor((int x, int z) coords, ChunkDirection direction)
+    void TriangulateChunk((int x, int y) coords)
     {
-        if (direction == ChunkDirection.NORTH)
-            return worldCells.ContainsKey((coords.x, coords.z + 1)) ? worldCells[(coords.x, coords.z + 1)] : null;
-        else if (direction == ChunkDirection.NORTHEAST)
-            return worldCells.ContainsKey((coords.x + 1, coords.z + 1)) ? worldCells[(coords.x + 1, coords.z + 1)] : null;
-        else if (direction == ChunkDirection.EAST)
-            return worldCells.ContainsKey((coords.x + 1, coords.z)) ? worldCells[(coords.x + 1, coords.z)] : null;
-        else if (direction == ChunkDirection.SOUTH)
-            return worldCells.ContainsKey((coords.x, coords.z - 1)) ? worldCells[(coords.x, coords.z - 1)] : null;
-        else if (direction == ChunkDirection.SOUTHWEST)
-            return worldCells.ContainsKey((coords.x - 1, coords.z - 1)) ? worldCells[(coords.x - 1, coords.z - 1)] : null;
-        else if (direction == ChunkDirection.WEST)
-            return worldCells.ContainsKey((coords.x - 1, coords.z)) ? worldCells[(coords.x - 1, coords.z)] : null;
-        else
-            return null;
+        int[,,] north, northEast, east, south, southWest, west;
+
+        chunks[coords].Triangulate(
+            worldCells.TryGetValue(NeighborCoords(coords, ChunkDirection.NORTH), out north) ? north : null,
+            worldCells.TryGetValue(NeighborCoords(coords, ChunkDirection.NORTHEAST), out northEast) ? northEast : null,
+            worldCells.TryGetValue(NeighborCoords(coords, ChunkDirection.EAST), out east) ? east : null,
+            worldCells.TryGetValue(NeighborCoords(coords, ChunkDirection.SOUTH), out south) ? south : null,
+            worldCells.TryGetValue(NeighborCoords(coords, ChunkDirection.SOUTHWEST), out southWest) ? southWest : null,
+            worldCells.TryGetValue(NeighborCoords(coords, ChunkDirection.WEST), out west) ? west : null
+            );
     }
 
-    public static Chunk GetChunkNeighbor((int x, int z) coords, ChunkDirection direction)
+    public static (int, int) NeighborCoords((int x, int z) coord, ChunkDirection direction)
     {
-        if (direction == ChunkDirection.NORTH)
-            return chunks.ContainsKey((coords.x, coords.z + 1)) ? chunks[(coords.x, coords.z + 1)] : null;
-        else if (direction == ChunkDirection.NORTHEAST)
-            return chunks.ContainsKey((coords.x + 1, coords.z + 1)) ? chunks[(coords.x + 1, coords.z + 1)] : null;
-        else if (direction == ChunkDirection.EAST)
-            return chunks.ContainsKey((coords.x + 1, coords.z)) ? chunks[(coords.x + 1, coords.z)] : null;
-        else if (direction == ChunkDirection.SOUTH)
-            return chunks.ContainsKey((coords.x, coords.z - 1)) ? chunks[(coords.x, coords.z - 1)] : null;
-        else if (direction == ChunkDirection.SOUTHWEST)
-            return chunks.ContainsKey((coords.x - 1, coords.z - 1)) ? chunks[(coords.x - 1, coords.z - 1)] : null;
-        else if (direction == ChunkDirection.WEST)
-            return chunks.ContainsKey((coords.x - 1, coords.z)) ? chunks[(coords.x - 1, coords.z)] : null;
-        else
-            return null;
+        return direction switch
+        {
+            ChunkDirection.NORTH => (coord.x, coord.z + 1),
+            ChunkDirection.NORTHEAST => (coord.x + 1, coord.z + 1),
+            ChunkDirection.EAST => (coord.x + 1, coord.z),
+            ChunkDirection.SOUTH => (coord.x, coord.z - 1),
+            ChunkDirection.SOUTHWEST => (coord.x - 1, coord.z - 1),
+            ChunkDirection.WEST => (coord.x - 1, coord.z),
+            _ => coord
+        };
     }
 
     float GenerateNoiseValue(Vector3 position, int octaves)
