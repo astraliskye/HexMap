@@ -25,14 +25,16 @@ public class TerrainGenerator : MonoBehaviour
     (int x, int z) currentChunk;
     int renderDistance = 5;
 
-    static Dictionary<(int, int), int[,,]> worldCells = new Dictionary<(int, int), int[,,]>();
-    static Dictionary<(int, int), Chunk> chunks = new Dictionary<(int, int), Chunk>();
+    static Dictionary<(int, int), int[,,]> worldCells;
+    static Dictionary<(int, int), Chunk> chunks;
     List<(int x, int z)> chunksToCreate;
     List<Chunk> chunkPool;
 
-    void Start()
+    void OnEnable()
     {
         // Initialize variables
+        worldCells = new Dictionary<(int, int), int[,,]>();
+        chunks = new Dictionary<(int, int), Chunk>();
         chunksToCreate = new List<(int, int)>();
         chunkPool = new List<Chunk>();
 

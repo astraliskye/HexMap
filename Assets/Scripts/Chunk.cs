@@ -21,9 +21,10 @@ public class Chunk : MonoBehaviour
         meshCollider = GetComponent<MeshCollider>();
     }
 
-    private void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
-        Gizmos.DrawWireMesh(mesh, 0, transform.position);
+        Gizmos.color = new Color(1f, 0, 0);
+        Gizmos.DrawWireMesh(mesh, 0, transform.position, Quaternion.identity, Vector3.one);
     }
 
     public void AddCells(int[,,] cells)
@@ -92,16 +93,17 @@ public class Chunk : MonoBehaviour
                         }
 
                         // Top left
-                        if (x > 0 && z < cells.GetLength(2) - 1)
+                        if (x > 0 && z < cells.GetLength(2) - 1)    // inside chunk
                         {
-                            if (z % 2 == 0 && cells[x - 1, y, z + 1] == 0) {
+                            if (z % 2 == 0 && cells[x - 1, y, z + 1] == 0)      // event rows
+                            {
                                 AddQuad(
                                     center + CellInfo.corners[0],
                                     center + CellInfo.corners[5],
                                     center + CellInfo.corners[5] + new Vector3(0, -CellInfo.cellHeight, 0),
                                     center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0));
                             }
-                            else if (z % 2 == 1 && cells[x, y, z + 1] == 0)
+                            else if (z % 2 == 1 && cells[x, y, z + 1] == 0)     // odd rows
                             {
                                 AddQuad(
                                     center + CellInfo.corners[0],
@@ -110,7 +112,7 @@ public class Chunk : MonoBehaviour
                                     center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0));
                             }
                         }
-                        else if (z == cells.GetLength(2) - 1 && north != null && north[x, y, 0] == 0)
+                        else if (z == cells.GetLength(2) - 1 && north != null && north[x, y, 0] == 0)   // top row
                         {
                             AddQuad(
                                     center + CellInfo.corners[0],
@@ -118,19 +120,30 @@ public class Chunk : MonoBehaviour
                                     center + CellInfo.corners[5] + new Vector3(0, -CellInfo.cellHeight, 0),
                                     center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0));
                         }
-                        else if (z < cells.GetLength(2) - 1 && x == 0 && west != null && west[west.GetLength(0) - 1, y, z + 1] == 0)
+                        else if (z < cells.GetLength(2) - 1 && x == 0)    // left side non-top row
                         {
-                            AddQuad(
+                            if (z % 2 == 0 && west != null && west[west.GetLength(0) - 1, y, z + 1] == 0)   // even rows (outside chunk)
+                            {
+                                AddQuad(
                                     center + CellInfo.corners[0],
                                     center + CellInfo.corners[5],
                                     center + CellInfo.corners[5] + new Vector3(0, -CellInfo.cellHeight, 0),
                                     center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
+                            else if (z % 2 == 1 && cells[x, y, z + 1] == 0)     // odd rows (inside chunk)
+                            {
+                                AddQuad(
+                                        center + CellInfo.corners[0],
+                                        center + CellInfo.corners[5],
+                                        center + CellInfo.corners[5] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                        center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
                         }
 
                         // Top right
-                        if (x < cells.GetLength(0) - 1 && z < cells.GetLength(2) - 1)
+                        if (x < cells.GetLength(0) - 1 && z < cells.GetLength(2) - 1)   // inside chunk
                         {
-                            if (z % 2 == 0 && cells[x, y, z + 1] == 0)
+                            if (z % 2 == 0 && cells[x, y, z + 1] == 0)  // even rows
                             {
                                 AddQuad(
                                     center + CellInfo.corners[1],
@@ -138,7 +151,7 @@ public class Chunk : MonoBehaviour
                                     center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0),
                                     center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0));
                             }
-                            else if (z % 2 == 1 && cells[x + 1, y, z + 1] == 0)
+                            else if (z % 2 == 1 && cells[x + 1, y, z + 1] == 0) // odd rows
                             {
                                 AddQuad(
                                     center + CellInfo.corners[1],
@@ -147,7 +160,7 @@ public class Chunk : MonoBehaviour
                                     center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0));
                             }
                         }
-                        else if (x < cells.GetLength(0) - 1 & z == cells.GetLength(2) - 1 && north != null && north[x + 1, y, 0] == 0)
+                        else if (x < cells.GetLength(0) - 1 & z == cells.GetLength(2) - 1 && north != null && north[x + 1, y, 0] == 0)  // top row
                         {
                             AddQuad(
                                     center + CellInfo.corners[1],
@@ -155,7 +168,7 @@ public class Chunk : MonoBehaviour
                                     center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0),
                                     center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0));
                         }
-                        else if (x == cells.GetLength(0) - 1 && z == cells.GetLength(2) - 1 && northeast != null && northeast[0, y, 0] == 0)
+                        else if (x == cells.GetLength(0) - 1 && z == cells.GetLength(2) - 1 && northeast != null && northeast[0, y, 0] == 0)    // top right
                         {
                             AddQuad(
                                     center + CellInfo.corners[1],
@@ -163,17 +176,28 @@ public class Chunk : MonoBehaviour
                                     center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0),
                                     center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0));
                         }
-                        else if (x == cells.GetLength(0) - 1 && z < cells.GetLength(2) - 1 && east != null && east[0, y, z + 1] == 0)
+                        else if (x == cells.GetLength(0) - 1 && z < cells.GetLength(2) - 1)   // right edge
                         {
-                            AddQuad(
-                                    center + CellInfo.corners[1],
-                                    center + CellInfo.corners[0],
-                                    center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0),
-                                    center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            if (z % 2 == 0 && cells[x, y, z + 1] == 0)      // even rows (inside chunk)
+                            {
+                                AddQuad(
+                                        center + CellInfo.corners[1],
+                                        center + CellInfo.corners[0],
+                                        center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                        center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
+                            else if (z % 2 == 1 && east != null && east[0, y, z + 1] == 0)      // odd rows (outside chunk)
+                            {
+                                AddQuad(
+                                        center + CellInfo.corners[1],
+                                        center + CellInfo.corners[0],
+                                        center + CellInfo.corners[0] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                        center + CellInfo.corners[1] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
                         }
 
                         // Bottom right
-                        if (x < cells.GetLength(0) - 1 && z > 0)
+                        if (x < cells.GetLength(0) - 1 && z > 0)    // inside chunk
                         {
                             if (z % 2 == 0 && cells[x, y, z - 1] == 0)
                             {
@@ -192,9 +216,36 @@ public class Chunk : MonoBehaviour
                                     center + CellInfo.corners[3] + new Vector3(0, -CellInfo.cellHeight, 0));
                             }
                         }
+                        else if (z == 0 && south != null && south[x, y, south.GetLength(2) - 1] == 0) // bottom row
+                        {
+                            AddQuad(
+                                center + CellInfo.corners[3],
+                                center + CellInfo.corners[2],
+                                center + CellInfo.corners[2] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                center + CellInfo.corners[3] + new Vector3(0, -CellInfo.cellHeight, 0));
+                        }
+                        else if (x == cells.GetLength(0) - 1 && z > 0)      // right side not bottom row
+                        {
+                            if (z % 2 == 0 && cells[x, y, z - 1] == 0)  // even rows (inside chunk)
+                            {
+                                AddQuad(
+                                    center + CellInfo.corners[3],
+                                    center + CellInfo.corners[2],
+                                    center + CellInfo.corners[2] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[3] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
+                            else if (z % 2 == 1 && east != null && east[0, y, z - 1] == 0)  // odd rows (outside chunk)
+                            {
+                                AddQuad(
+                                    center + CellInfo.corners[3],
+                                    center + CellInfo.corners[2],
+                                    center + CellInfo.corners[2] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[3] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
+                        }
 
                         // Bottom left
-                        if (x > 0 && z > 0)
+                        if (x > 0 && z > 0)     // inside chunk
                         {
                             if (z % 2 == 0 && cells[x - 1, y, z - 1] == 0)
                             {
@@ -205,6 +256,41 @@ public class Chunk : MonoBehaviour
                                     center + CellInfo.corners[4] + new Vector3(0, -CellInfo.cellHeight, 0));
                             }
                             else if (z % 2 == 1 && cells[x, y, z - 1] == 0)
+                            {
+                                AddQuad(
+                                    center + CellInfo.corners[4],
+                                    center + CellInfo.corners[3],
+                                    center + CellInfo.corners[3] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[4] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
+                        }
+                        else if (x > 0 & z == 0 && south != null && south[x - 1, y, south.GetLength(2) - 1] == 0)  // bottom row
+                        {
+                            AddQuad(
+                                    center + CellInfo.corners[4],
+                                    center + CellInfo.corners[3],
+                                    center + CellInfo.corners[3] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[4] + new Vector3(0, -CellInfo.cellHeight, 0));
+                        }
+                        else if (x == 0 && z == 0 && southwest != null && southwest[southwest.GetLength(0) - 1, y, southwest.GetLength(2) - 1] == 0)    // bottom left
+                        {
+                            AddQuad(
+                                    center + CellInfo.corners[4],
+                                    center + CellInfo.corners[3],
+                                    center + CellInfo.corners[3] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[4] + new Vector3(0, -CellInfo.cellHeight, 0));
+                        }
+                        else if (x == 0 && z > 0)   // left edge not bottom row
+                        {
+                            if (z % 2 == 0 && west != null && west[west.GetLength(0) - 1, y, z - 1] == 0)      // even rows (outside chunk)
+                            {
+                                AddQuad(
+                                    center + CellInfo.corners[4],
+                                    center + CellInfo.corners[3],
+                                    center + CellInfo.corners[3] + new Vector3(0, -CellInfo.cellHeight, 0),
+                                    center + CellInfo.corners[4] + new Vector3(0, -CellInfo.cellHeight, 0));
+                            }
+                            else if (z % 2 == 1 && cells[x, y, z - 1] == 0)      // odd rows (inside chunk)
                             {
                                 AddQuad(
                                     center + CellInfo.corners[4],
